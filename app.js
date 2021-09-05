@@ -84,51 +84,51 @@ const stepThrougCell = (row, column) => {
 
 stepThrougCell(startRow, startColumn);
 
-horizontals.forEach((row, rowIndex) => {
-	row.forEach((open, colIndex) => {
-		if (open) return;
-		const rnd = Math.floor(Math.random() * colors.length);
-		const wall = Bodies.rectangle(
-			colIndex * unitLengthX + unitLengthX / 2,
-			rowIndex * unitLengthY + unitLengthY,
-			unitLengthX,
-			unitWidth,
-			{
-				label: 'wall',
-				isStatic: true,
-				render: {
-					fillStyle: colors[rnd],
-					wireframes: false
-				}
+generateWalls = (walls, type) => {
+	walls.forEach((row, rowIndex) => {
+		row.forEach((open, colIndex) => {
+			if (open) return;
+			let wall;
+			const rnd = Math.floor(Math.random() * colors.length);
+			if (type === 'horizontal') {
+				wall = Bodies.rectangle(
+					colIndex * unitLengthX + unitLengthX / 2,
+					rowIndex * unitLengthY + unitLengthY,
+					unitLengthX,
+					unitWidth,
+					{
+						label: 'wall',
+						isStatic: true,
+						render: {
+							fillStyle: colors[rnd],
+							wireframes: false
+						}
+					}
+				);
+			} else if (type === 'vertical') {
+				wall = Bodies.rectangle(
+					colIndex * unitLengthX + unitLengthX,
+					rowIndex * unitLengthY + unitLengthY / 2,
+					unitWidth,
+					unitLengthY,
+					{
+						label: 'wall',
+						isStatic: true,
+						render: {
+							fillStyle: colors[rnd],
+							wireframes: false
+						}
+					}
+				);
 			}
-		);
 
-		World.add(world, wall);
+			World.add(world, wall);
+		});
 	});
-});
+};
 
-verticals.forEach((row, rowIndex) => {
-	row.forEach((open, colIndex) => {
-		if (open) return;
-		const rnd = Math.floor(Math.random() * colors.length);
-		const wall = Bodies.rectangle(
-			colIndex * unitLengthX + unitLengthX,
-			rowIndex * unitLengthY + unitLengthY / 2,
-			unitWidth,
-			unitLengthY,
-			{
-				label: 'wall',
-				isStatic: true,
-				render: {
-					fillStyle: colors[rnd],
-					wireframes: false
-				}
-			}
-		);
-
-		World.add(world, wall);
-	});
-});
+generateWalls(horizontals, 'horizontal');
+generateWalls(verticals, 'vertical');
 
 // Goal
 const goal = Bodies.rectangle(width - unitLengthX / 2, height - unitLengthY / 2, unitLengthX * 0.5, unitLengthY * 0.5, {
@@ -147,28 +147,60 @@ const player = Bodies.circle(unitLengthX / 2, unitLengthY / 2, playerRadius, {
 	label: 'player',
 	render: {
 		fillStyle: 'blue'
-	}
+	},
+	frictionAir: 0,
+	frictionStatic: 0,
+	friction: 0,
+	//restitution: 1, Uncomment for Arkanoid mode
+	inertia: Infinity
 });
 World.add(world, player);
 
-document.addEventListener('keydown', () => {
+document.addEventListener('keydown', (e) => {
 	const { x, y } = player.velocity;
 	const speedLimit = 5;
 
-	if (event.keyCode === 87 && y > -speedLimit) {
+	if (e.code === 'KeyW') {
 		Body.setVelocity(player, { x, y: y - 5 });
 	}
 
-	if (event.keyCode === 68 && x < speedLimit) {
+	if (e.code === 'KeyD') {
 		Body.setVelocity(player, { x: x + 5, y });
 	}
 
-	if (event.keyCode === 83 && y < speedLimit) {
+	if (e.code === 'KeyS') {
 		Body.setVelocity(player, { x, y: y + 5 });
 	}
 
-	if (event.keyCode === 65 && x > -speedLimit) {
+	if (e.code === 'KeyA') {
 		Body.setVelocity(player, { x: x - 5, y });
+	}
+});
+
+const limitMaxSpeed = () => {
+	let maxSpeed = 5;
+	if (player.velocity.x > maxSpeed) {
+		Body.setVelocity(player, { x: maxSpeed, y: player.velocity.y });
+	}
+
+	if (player.velocity.x < -maxSpeed) {
+		Body.setVelocity(player, { x: -maxSpeed, y: player.velocity.y });
+	}
+
+	if (player.velocity.y > maxSpeed) {
+		Body.setVelocity(player, { x: player.velocity.x, y: maxSpeed });
+	}
+
+	if (player.velocity.y < -maxSpeed) {
+		Body.setVelocity(player, { x: -player.velocity.x, y: -maxSpeed });
+	}
+};
+
+Events.on(engine, 'beforeUpdate', limitMaxSpeed);
+
+document.addEventListener('keyup', (e) => {
+	if (e.code === 'KeyW' || e.code === 'KeyA' || e.code === 'KeyS' || e.code === 'KeyD') {
+		Body.setVelocity(player, { x: 0, y: 0 });
 	}
 });
 
