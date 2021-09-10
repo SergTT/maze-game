@@ -1,12 +1,13 @@
 const { Engine, Render, Runner, World, Bodies, Body, Events } = Matter;
-const cellsHorizontal = 5;
-const cellsVertical = 5;
+const cellsHorizontal = 15;
+const cellsVertical = 10;
 const width = window.innerWidth;
 const height = window.innerHeight;
 const unitLengthX = width / cellsHorizontal;
 const unitLengthY = height / cellsVertical;
 const unitWidth = unitLengthX / 20;
 const colors = [ 'orange', 'green', 'yellow', 'red', 'blue', 'violet', 'gray', 'purple', 'white' ];
+const maxSpeed = 7;
 
 const engine = Engine.create();
 engine.world.gravity.y = 0;
@@ -151,34 +152,34 @@ const player = Bodies.circle(unitLengthX / 2, unitLengthY / 2, playerRadius, {
 	frictionAir: 0,
 	frictionStatic: 0,
 	friction: 0,
-	//restitution: 1, Uncomment for Arkanoid mode
+	// Uncomment next two lines for Arkanoid mode
+	//restitution: 1,
+	//restitution: 1,
 	inertia: Infinity
 });
 World.add(world, player);
 
 document.addEventListener('keydown', (e) => {
 	const { x, y } = player.velocity;
-	const speedLimit = 5;
 
 	if (e.code === 'KeyW') {
-		Body.setVelocity(player, { x, y: y - 5 });
+		Body.setVelocity(player, { x, y: y - maxSpeed });
 	}
 
 	if (e.code === 'KeyD') {
-		Body.setVelocity(player, { x: x + 5, y });
+		Body.setVelocity(player, { x: x + maxSpeed, y });
 	}
 
 	if (e.code === 'KeyS') {
-		Body.setVelocity(player, { x, y: y + 5 });
+		Body.setVelocity(player, { x, y: y + maxSpeed });
 	}
 
 	if (e.code === 'KeyA') {
-		Body.setVelocity(player, { x: x - 5, y });
+		Body.setVelocity(player, { x: x - maxSpeed, y });
 	}
 });
 
 const limitMaxSpeed = () => {
-	let maxSpeed = 5;
 	if (player.velocity.x > maxSpeed) {
 		Body.setVelocity(player, { x: maxSpeed, y: player.velocity.y });
 	}
@@ -216,4 +217,14 @@ Events.on(engine, 'collisionStart', (event) => {
 			});
 		}
 	});
+});
+
+const wellcomeScreen = document.querySelector('.wellcome-screen__wrapper');
+const canvas = document.querySelector('canvas');
+
+canvas.classList.add('hidden');
+
+document.querySelector('.play').addEventListener('click', () => {
+	canvas.classList.remove('hidden');
+	wellcomeScreen.classList.add('hidden');
 });
